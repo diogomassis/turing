@@ -207,3 +207,54 @@ class Enigma:
         for char in message:
             encrypted_message += self.encrypt_char(char)
         return encrypted_message
+
+
+if __name__ == "__main__":
+    print("--- Example 1: Encrypt a message ---")
+    enigma_machine = Enigma(
+        rotor_types=["I", "II", "III"],
+        rotor_settings="ABC",
+        ring_settings="AAA",
+        plugboard_settings="AZ BS",
+        reflector_type="B"
+    )
+
+    plaintext = "HELLOWORLD"
+    print(f"Original Text: {plaintext}")
+    ciphertext = enigma_machine.encrypt_message(plaintext)
+    print(f"Encrypted Text:  {ciphertext}")
+
+    print("\n--- Example 2: Decrypt the same message (with the same settings) ---")
+    enigma_decipher = Enigma(
+        rotor_types=["I", "II", "III"],
+        rotor_settings="ABC",
+        ring_settings="AAA",
+        plugboard_settings="AZ BS",
+        reflector_type="B"
+    )
+    decrypted_text = enigma_decipher.encrypt_message(ciphertext)
+    print(f"Encrypted Text:  {ciphertext}")
+    print(f"Decrypted Text: {decrypted_text}")
+
+    print("\n--- Example 3: Longer message with spaces/numbers ---")
+    enigma_long_message = Enigma(
+        rotor_types=["III", "I", "II"],
+        rotor_settings="WXC",
+        ring_settings="BGD",
+        plugboard_settings="PO IU LK MN",
+        reflector_type="C"
+    )
+    long_plaintext = "TESTING ENIGMA MACHINE SIMULATOR"
+    print(f"Original Text: {long_plaintext}")
+    long_ciphertext = enigma_long_message.encrypt_message(long_plaintext)
+    print(f"Encrypted Text:  {long_ciphertext}")
+
+    enigma_long_decipher = Enigma(
+        rotor_types=["III", "I", "II"],
+        rotor_settings="WXC",
+        ring_settings="BGD",
+        plugboard_settings="PO IU LK MN",
+        reflector_type="C"
+    )
+    long_decrypted_text = enigma_long_decipher.encrypt_message(long_ciphertext)
+    print(f"Decrypted Text: {long_decrypted_text}")
