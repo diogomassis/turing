@@ -90,3 +90,27 @@ class Rotor:
         output_index_after_ring = (output_from_wiring_index + self.ring_setting) % 26
         final_output_index = (output_index_after_ring - self.position + 26) % 26
         return final_output_index
+
+
+class Reflector:
+    """
+    Simulates the Enigma Machine's Reflector (Umkehrwalze).
+    Performs a fixed, bidirectional substitution, sending the signal back through the rotors.
+    """
+    def __init__(self, wiring):
+        """
+        Initializes the Reflector with its wiring.
+        :param wiring: String defining the wiring (e.g., "YRUHQSLDPXNGOKMIEBFZCWVJAT").
+                       'A' maps to the first letter, 'B' to the second, etc.
+        The mappings are stored as indices (0-25).
+        """
+        self.alphabet = string.ascii_uppercase
+        self.mapping = [self.alphabet.find(c) for c in wiring]
+
+    def reflect(self, char_index):
+        """
+        Reflects a letter index.
+        :param char_index: Input letter index (0-25).
+        :return: Output letter index (0-25) after reflection.
+        """
+        return self.mapping[char_index]
