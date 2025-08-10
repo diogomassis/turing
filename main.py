@@ -114,3 +114,96 @@ class Reflector:
         :return: Output letter index (0-25) after reflection.
         """
         return self.mapping[char_index]
+
+
+class Enigma:
+    """
+    Simulates the complete Enigma Machine.
+    Combines Plugboard, Rotors, and Reflector to encrypt/decrypt messages.
+    """
+    ROTOR_WIRINGS = {
+        "I":   "EKMFLGDQVZNTOWYHXUSPAIBRCJ", "notch_I": "Q",
+        "II":  "AJDKSIRUXBLHWTMCQGZNPYFVOE", "notch_II": "E",
+        "III": "BDFHJLCPRTXVZNYEIWGAKMUSQO", "notch_III": "V",
+        "IV":  "ESOVPZJAYQUIRHXLNFTGKDCMWB", "notch_IV": "J",
+        "V":   "VZBRGITYUPSDNHLXAWMJQOFECK", "notch_V": "Z"
+    }
+
+    REFLECTOR_WIRINGS = {
+        "B": "YRUHQSLDPXNGOKMIEBFZCWVJAT",
+        "C": "FVPJIAOYEDRZXWGCTKUQSBNMHL"
+    }
+
+    def __init__(self, rotor_types, rotor_settings, ring_settings, plugboard_settings, reflector_type):
+        """
+        Initializes the Enigma Machine.
+        :param rotor_types: List of strings with rotor types (e.g., ["I", "II", "III"]).
+                            Should be provided left to right (slow to fast rotor).
+        :param rotor_settings: String with initial rotor positions (e.g., "ABC").
+                               Each character corresponds to the letter visible in the rotor window.
+        :param ring_settings: String with ring settings for the rotors (e.g., "AAA").
+                              Each character defines the ring offset for the corresponding rotor.
+        :param plugboard_settings: String with plugboard connections (e.g., "AZ BS").
+        :param reflector_type: String with the reflector type (e.g., "B").
+        """
+        self.alphabet = string.ascii_uppercase
+        self.plugboard = Plugboard(plugboard_settings)
+        self.reflector = Reflector(self.REFLECTOR_WIRINGS[reflector_type.upper()])
+
+        self.rotors = []
+        for i, rotor_type in enumerate(rotor_types):
+            rotor_wiring = self.ROTOR_WIRINGS[rotor_type.upper()]
+            rotor_notch = self.ROTOR_WIRINGS[f"notch_{rotor_type.upper()}"]
+            ring_setting_char = ring_settings[i].upper()
+            ring_setting_int = self.alphabet.find(ring_setting_char)
+            rotor = Rotor(rotor_wiring, rotor_notch, ring_setting_int)
+            rotor.position = self.alphabet.find(rotor_settings[i].upper())
+            self.rotors.append(rotor)
+
+        if len(self.rotors) >= 3:
+            self.slow_rotor = self.rotors[0]
+            self.medium_rotor = self.rotors[1]
+            self.fast_rotor = self.rotors[2]
+        else:
+            raise ValueError("The Enigma Machine requires at least 3 rotors for this simulation.")
+
+    def _step_rotors(self):
+        """
+        Controls rotor movement before each character is encrypted.
+        Implements the Enigma I "stepping" and "double-stepping" mechanism.
+        """
+        if self.medium_rotor.at_notch():
+            self.medium_rotor.rotate()
+            self.slow_rotor.rotate()
+        elif self.fast_rotor.at_notch():
+            self.medium_rotor.rotate()
+        self.fast_rotor.rotate()
+
+    def encrypt_char(self, char):
+        """
+        Encrypts/decrypts a single character.
+        """
+        char = char.upper()
+        if not char.isalpha():
+            return char
+
+        self._step_rotors()
+
+        char_index = self.alphabet.find(char)
+        processed_index = self.plugboard.process(char_index)
+        for rotor in reversed(self.rotors):
+            processed_index = rotor.process_forward(processed_index)
+        processed_index = self.reflector.reflect(processed_index)
+        for rotor in self.rotors:
+            processed_index = rotor.process_backward(processed_index)
+        final_index = self.plugboard.process(processed_index)
+        return self.alphabet[final_index]
+
+    def encrypt_message(self, message):
+        """
+        Encrypts/decrypts a complete message.
+        """
+        encrypted_message = ""
+        for char in message:
+            encrypted_message += self.encrypt_char(char)
+        return encrypted_message
